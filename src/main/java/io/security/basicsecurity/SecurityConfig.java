@@ -8,10 +8,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.logout.LogoutHandler;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
 /**
@@ -61,5 +64,23 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     }
                 })
                 .permitAll(); //loginPage()에 지정한 "/loginPage" URL을 누구나 접근 가능하도록 허용한다.
+
+        http.logout() //로그아웃 기능이 작동한다.
+                .logoutUrl("/logout") //로그아웃 처리 URL (default : /logout)
+                .logoutSuccessUrl("/login") // 로그아웃 성공 후 이동페이지
+                .deleteCookies("JSESSIONID", "remember-me") //로그아웃 후 쿠키 삭제
+                .addLogoutHandler(new LogoutHandler() { // 로그아웃 핸들러
+                    @Override
+                    public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
+                        HttpSession session = request.getSession();
+                        session.invalidate(); //세션 무효화
+                    }
+                })
+                .logoutSuccessHandler(new LogoutSuccessHandler() { //로그아웃 성공 후 핸들러
+                    @Override
+                    public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+                        response.sendRedirect("/login");
+                    }
+                });
     }
 }
