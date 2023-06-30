@@ -1,11 +1,13 @@
 package io.security.basicsecurity;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
@@ -28,6 +30,9 @@ import java.io.IOException;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Autowired
+    UserDetailsService userDetailsService; // remember me 기능을 수행할 때, 시스템에 있는 사용자 계정을 조회할때 필요한 클래스
 
     /**
      *  API 인증,인가 설정
@@ -82,5 +87,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                         response.sendRedirect("/login");
                     }
                 });
+
+        http.rememberMe() //http대신 and() 체이닝 기법으로 연결할 수 있다.
+                .rememberMeParameter("remember") // 기본 파라미터명 remember-me
+                .tokenValiditySeconds(3600) // 60분  Default 14일
+                .alwaysRemember(false) // 리멤버 미 기능이 활성화 되지 않아도 항상 실행(기본값 false)
+                .userDetailsService(userDetailsService); // remember me 기능을 수행할 때, 시스템에 있는 사용자 계정을 조회할때 필요한 클래스이다.
     }
 }
