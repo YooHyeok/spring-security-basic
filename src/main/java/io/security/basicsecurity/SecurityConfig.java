@@ -70,6 +70,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 })
                 .permitAll(); //loginPage()에 지정한 "/loginPage" URL을 누구나 접근 가능하도록 허용한다.
 
+        /* LogoutFilter API 설정 */
         http.logout() //로그아웃 기능이 작동한다.
                 .logoutUrl("/logout") //로그아웃 처리 URL (default : /logout)
                 .logoutSuccessUrl("/login") // 로그아웃 성공 후 이동페이지
@@ -87,11 +88,19 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                         response.sendRedirect("/login");
                     }
                 });
-
+        /* remember - me API 설정 */
         http.rememberMe() //http대신 and() 체이닝 기법으로 연결할 수 있다.
                 .rememberMeParameter("remember") // 기본 파라미터명 remember-me
                 .tokenValiditySeconds(3600) // 60분  Default 14일
                 .alwaysRemember(false) // 리멤버 미 기능이 활성화 되지 않아도 항상 실행(기본값 false)
                 .userDetailsService(userDetailsService); // remember me 기능을 수행할 때, 시스템에 있는 사용자 계정을 조회할때 필요한 클래스이다.
+
+        /* 동시 세션 제어 API 설정 */
+        http.sessionManagement() // 세션 관리 기능이 작동한다.
+                .invalidSessionUrl("/invalid") //세션이 유효하지 않을 때 이동할 페이지
+                .maximumSessions(1) //최대 허용 가능 세선 수, -1 : 무제한 로그인 세션 허용
+                .maxSessionsPreventsLogin(true) //동시 로그인 차단, false: 기존 세션 만료(default)
+                .expiredUrl("/expired"); //세션이 만료된 경우 이동할 페이지
+                ///invalid 와 /expired 를 permitAll() 로 설정 하지 않았을 경우와 같이 해당 URL을 인증받지 못한 상태에서 접근하게 되면 /login으로 이동하게 된다.
     }
 }
