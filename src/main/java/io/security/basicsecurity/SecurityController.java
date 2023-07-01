@@ -23,4 +23,12 @@ public class SecurityController {
     public String admin_sys() {
         return "admin/sys";
     }
+    @GetMapping("/denied")
+    public String denied() {
+        return "Access is denied";
+    }
+    @GetMapping("/login")
+    public String login() {
+        return "requestedLogin";
+    }
 }

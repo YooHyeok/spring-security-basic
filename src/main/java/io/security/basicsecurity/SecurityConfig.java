@@ -2,6 +2,7 @@ package io.security.basicsecurity;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -10,10 +11,15 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.RequestCache;
+import org.springframework.security.web.savedrequest.SavedRequest;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -61,6 +67,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
                 /* 권한 API 설정 */
                 //현재 사용자가 /user요청을 하게 되면 권한심사를 통해서 권한이 USER인 사용자만 해당 url자원에 접근가능하도록 인가처리를 한다.
+                .antMatchers("/login").permitAll()
                 .antMatchers("/user").hasRole("USER")
                 //admin을 포함한 모든 경로에 대한 요청에 ADMIN, SYS 사용자만이 해당 URL 접근 가능하도록 인가처리.
                 .antMatchers("/admin/pay").hasRole("ADMIN") // 구체적인 좁은 범위를 항상 먼저 설정한다. ex)/admin/**와 같이 넓은 범위가 먼저 오면 좁은 범위도 포함하기 때문이다.
@@ -81,7 +88,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     @Override
                     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
                         System.out.println("authentication = " + authentication.getName()); // 인증에 성공한 사용자 이름 출력
-                        response.sendRedirect("/"); //메인 Url Redirect
+
+                        /* 인증 & 인가 예외 처리 - 인증 성공 후 원래 가려고 했던 경로로 이동 */
+                        RequestCache requestCache = new HttpSessionRequestCache(); // 인증 예외 발생 후 해당 요청에 대한 세션 정보를 담은 캐시 객체
+                        SavedRequest savedRequest = requestCache.getRequest(request, response); // 원래 사용자가 가고자 했던 요청정보가 저장되어 있다.
+                        String redirectUrl = savedRequest.getRedirectUrl(); //원래 사용자가 가고자했던 요청 URL
+                        response.sendRedirect(redirectUrl);
+
+//                        response.sendRedirect("/"); //메인 Url Redirect
                     }
                 })
                 .failureHandler(new AuthenticationFailureHandler() { //로그인 실패 후 핸들러 설정
@@ -139,6 +153,21 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 //                .expiredUrl("/expired"); //세션이 만료된 경우 이동할 페이지
                 ///invalid 와 /expired 를 permitAll() 로 설정 하지 않았을 경우와 같이 해당 URL을 인증받지 못한 상태에서 접근하게 되면 /login으로 이동하게 된다.
 
-        /* 권한 설정 API */
+        /* 인증 & 인가 예외 처리 */
+        http.exceptionHandling()
+                .authenticationEntryPoint(new AuthenticationEntryPoint() { //인증 예외 발생 처리
+                    @Override
+                    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
+                        response.sendRedirect("/login"); // 인증 예외 발생 후 이동할 페이지 (시큐리티가 아닌 직접 등록한 REST API)
+                        // /login은 인증 자체를 받지 않은 사용자가 이동하는 url이므로 antMatchers()를 등록해야한다.
+                    }
+                })
+                .accessDeniedHandler(new AccessDeniedHandler() { //인가 예외 발생 처리
+                    @Override
+                    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
+                        response.sendRedirect("/denied"); // 인가 예외 발생 후 이동할 페이지 (시큐리티가 아닌 직접 등록한 REST API)
+                        // 현재 사용자가 접근하고자 하는 자원에 접근할 수 있는 '권한' 자체가 맞지 않는 예외이다.(인증을 받은 사용자)
+                    }
+                });
     }
 }
