@@ -99,16 +99,22 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         /* 동시 세션 제어 API 설정 */
         http.sessionManagement() // 세션 관리 기능이 작동한다.
                 /* 세션 고정 보호 API (4개중 1개 선택; 동시 세션 제어를 꺼야 테스트가 가능함)*/
-//                .sessionFixation().changeSessionId() // : 새로운 세션 생성(세션 속성값 그대로 사용) 및 세션 id발급 (서블릿 3.1 이상에서 기본값 작동)
-//                .sessionFixation().migrateSession() // : 새로운 세션 생성(세션 속성값 그대로 사용) 및 세션 id발급 (서블릿 3.1이하에서 기본값 작동)
-//                .sessionFixation().newSession() // 새로운 세션 생성 및 id 발급 이전 세션에서 설정한 여러가지 속성 값들을 사용하지 못하고 새롭게 속성값을 설정해야한다.
-                .sessionFixation().none(); // 세션이 새롭게 생성되지 않고 세션ID도 그대로 / 세션고정 공격에 노출된다.
+                .sessionFixation().changeSessionId() // : 새로운 세션 생성(세션 속성값 그대로 사용) 및 세션 id발급 (서블릿 3.1 이상에서 기본값 작동)
+                .sessionFixation().migrateSession() // : 새로운 세션 생성(세션 속성값 그대로 사용) 및 세션 id발급 (서블릿 3.1이하에서 기본값 작동)
+                .sessionFixation().newSession() // 새로운 세션 생성 및 id 발급 이전 세션에서 설정한 여러가지 속성 값들을 사용하지 못하고 새롭게 속성값을 설정해야한다.
+                .sessionFixation().none() // 세션이 새롭게 생성되지 않고 세션ID도 그대로 / 세션고정 공격에 노출된다.
+
+                /* 세션 정책 API (4개중 1개 선택)*/
+                .sessionCreationPolicy(SessionCreationPolicy.ALWAYS) // 스프링 시큐리티가 항상 세션 생성
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // 스프링 시큐리티가 필요 시 세션 생성(기본값)
+                .sessionCreationPolicy(SessionCreationPolicy.NEVER) // 스프링 시큐리티가 세션을 생성하지 않지만 이미 존재하면 존재하는 세션을 사용
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // 스프링 시큐리티가 세션을 생성하지도 않고 존재해도 사용하지 않음. (세션대신 JWT 인증방식)
 
                 /* 동시 세션 제어 API */
-                /*.invalidSessionUrl("/invalid") //세션이 유효하지 않을 때 이동할 페이지
+                .invalidSessionUrl("/invalid") //세션이 유효하지 않을 때 이동할 페이지
                 .maximumSessions(1) //최대 허용 가능 세선 수, -1 : 무제한 로그인 세션 허용
                 .maxSessionsPreventsLogin(true) //동시 로그인 차단, false: 기존 세션 만료(default)
-                .expiredUrl("/expired"); //세션이 만료된 경우 이동할 페이지*/
+                .expiredUrl("/expired"); //세션이 만료된 경우 이동할 페이지
                 ///invalid 와 /expired 를 permitAll() 로 설정 하지 않았을 경우와 같이 해당 URL을 인증받지 못한 상태에서 접근하게 되면 /login으로 이동하게 된다.
     }
 }
