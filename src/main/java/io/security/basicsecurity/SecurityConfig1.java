@@ -1,3 +1,4 @@
+/*
 package io.security.basicsecurity;
 
 import org.springframework.context.annotation.Configuration;
@@ -28,4 +29,4 @@ class SecurityConfig2 extends WebSecurityConfigurerAdapter {
             .anyRequest().permitAll() //모든 사용자가 인증을 받지 않더라도 어떠한 요청에도 보안기능이 작동하도록 설정
         .and().formLogin(); // formLogin 인증방식
     }
-}
+}*/
