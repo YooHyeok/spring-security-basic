@@ -19,6 +19,8 @@ public class SecurityController {
         Authentication authentication1 = context.getAuthentication();
         return "home";
     }
+
+
     @GetMapping("/thread")
     public String thread() {
         new Thread(new Runnable() {
@@ -26,8 +28,9 @@ public class SecurityController {
             public void run() {
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             }
-        })
-        return "thread"
+        });
+
+        return "thread";
     }
 
     @GetMapping("/user")

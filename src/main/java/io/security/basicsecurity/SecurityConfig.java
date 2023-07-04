@@ -50,9 +50,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
      */
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.inMemoryAuthentication().withUser("user").password("{noop}1234").roles("USER"); // 메모리 방식으로 사용자를 생성
-        auth.inMemoryAuthentication().withUser("sys").password("{noop}1234").roles("SYS"); // {noop} 평문으로 암호화 - prefix형태로 암호화 알고리즘 유형 지정
-        auth.inMemoryAuthentication().withUser("admin").password("{noop}1234").roles("ADMIN");
+//        auth.inMemoryAuthentication().withUser("user").password("{noop}1234").roles("USER"); // 메모리 방식으로 사용자를 생성
+//        auth.inMemoryAuthentication().withUser("sys").password("{noop}1234").roles("SYS"); // {noop} 평문으로 암호화 - prefix형태로 암호화 알고리즘 유형 지정
+//        auth.inMemoryAuthentication().withUser("admin").password("{noop}1234").roles("ADMIN");
     }
 
     /**
@@ -85,7 +85,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 //        세션_정책_API_기능_구현(http);
 //        권한설정과_표현식_기능_구현(http);
 //        예외처리_및_요청_캐시(http);
-        securityContextThreadLocal(http);
+//        securityContextThreadLocal(http);
+        인가개념_및_필터이해(http);
+    }
+
+    private static void 인가개념_및_필터이해(HttpSecurity http) throws Exception {
+        http.authorizeRequests()
+                .antMatchers("/user").hasRole("USER") // /user url 리소스에는 USER 권한만 접근 허용
+            .anyRequest().permitAll();// 나머지 자원에는 접근 허용
+        http.formLogin();
     }
 
     private static void securityContextThreadLocal(HttpSecurity http) throws Exception {
